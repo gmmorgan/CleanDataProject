@@ -4,6 +4,7 @@ unzip("getdata%2Fprojectfiles%2FUCI HAR Dataset.zip")
 
 base.dir = "UCI HAR Dataset"                # this is our dataset
 # knitr does not play well with setwd(), so everything is relative file paths.
+# Helper function to assemble file paths.
 datafile = function(...){
     file.path(base.dir, ...)
 }
@@ -49,6 +50,7 @@ chopped = all.data[c(1:2, selected.features+2)]    # don't forget offset for fir
 
 
 ## ----sanitize.names------------------------------------------------------
+# replace any number of punctuation characters with a single dot.
 sanitized.features = gsub("[[:punct:]]+",".",features)
 # remove any remaining trailing dots
 sanitized.features =  gsub("\\.$","", sanitized.features)
@@ -66,29 +68,34 @@ chopped$Subject = factor(chopped$Subject)
 
 
 ## ----create.tidy.data----------------------------------------------------
-tidy.data = aggregate(chopped[-c(1,2)], by=list(Subject=chopped$Subject, Activity=chopped$Activity), FUN=mean)
+tidy.data = aggregate(chopped[-c(1,2)], 
+                      by=list(Subject=chopped$Subject, 
+                              Activity=chopped$Activity), 
+                      FUN=mean)
 
 write.csv(tidy.data, file="tidy_data.txt", row.names=FALSE)
 
+
 ## ----codebook------------------------------------------------------------
 # Create a code book
-{         # sink() does not work well with knitr, must isolate it in {}
-sink("Codebook.txt")
-cat("Code Book for tidy_data.txt\n")
-cat("\n\n")
-cat("Subject is a factor with the following levels:\n")
-str(tidy.data$Subject)
-cat("\n\n")
-cat("Activity is a factor with the following levels:\n")
-print(data.frame("Activity"=levels(tidy.data$Activity)))
-cat("\n\n")
-cat("The remaining columns contain means and standard deviations for various measurements\n")
-cat("All values are numeric.\n")
-cat("The original data names have had punctuation removed so the column names can be used safely.\n")
-cat("Please consult the README.txt for the original data for further clarification\n")
-print(data.frame("Original Names"=features[selected.features], 
+# sink() does not work well with knitr, must isolate it in {}
+{
+    sink("Codebook.txt")
+    cat("Code Book for tidy_data.txt\n")
+    cat("\n\n")
+    cat("Subject is a factor with the following levels:\n")
+    str(tidy.data$Subject)
+    cat("\n\n")
+    cat("Activity is a factor with the following levels:\n")
+    print(data.frame("Activity"=levels(tidy.data$Activity)))
+    cat("\n\n")
+    cat("The remaining columns contain means and standard deviations for various measurements\n")
+    cat("All values are numeric.\n")
+    cat("The original data names have had punctuation removed so the column names can be used safely.\n")
+    cat("Please consult the README.txt for the original data for further clarification\n")
+    print(data.frame("Original Names"=features[selected.features], 
                  row.names=sanitized.features[selected.features]))
-sink()
+    sink()
 }
 
 

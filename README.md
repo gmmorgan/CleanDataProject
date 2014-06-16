@@ -11,6 +11,7 @@ unzip("getdata%2Fprojectfiles%2FUCI HAR Dataset.zip")
 
 base.dir = "UCI HAR Dataset"                # this is our dataset
 # knitr does not play well with setwd(), so everything is relative file paths.
+# Helper function to assemble file paths.
 datafile = function(...){
     file.path(base.dir, ...)
 }
@@ -37,15 +38,20 @@ training.data = get.data("train", "subject_train.txt", "y_train.txt", "X_train.t
 all.data = rbind(test.data, training.data)
 ```
 
-extract only means and stds for each measurement
-activity and subject are not measurements, so they stay.
+Extract only the means and stds for each measurement.
+Activity and subject are not measurements, so they stay.
 The standard deviations are clearly identified by "std()"
 The means are more troublesome. By my understanding of the description in features_info.txt,
 both"mean()" and "meanFreq()" identify means, but the measurements containing "Mean" are are 
 derived from means, but are not themselves means.
+They represent angle measurements based on means.
 I therefore exclude them.
+
 If this is not satisfactory, they can easily be included.
+
 The file "features.txt" contains useful header information that we need
+
+We call the data frame we create _"chopped"_ .
 
 ```r
 features = read.table(datafile("features.txt"), 
@@ -65,11 +71,13 @@ selected.features = c(means,
 chopped = all.data[c(1:2, selected.features+2)]    # don't forget offset for first two columns
 ```
 
+We need to _sanitize_ the column names that are obtained from the file _"features.txt"_.
 We need to some ad-hoc cleaning of the column names to ensure no
 horrors occur with the "$" operator.
-replace any number of punctuation symbols with dots
+We replace any number of punctuation symbols with dots, and then remove any remaining trailing dots that searve no useful purpose.
 
 ```r
+# replace any number of punctuation characters with a single dot.
 sanitized.features = gsub("[[:punct:]]+",".",features)
 # remove any remaining trailing dots
 sanitized.features =  gsub("\\.$","", sanitized.features)
@@ -78,44 +86,50 @@ names(chopped) = c(names(chopped[1:2]), sanitized.features[selected.features])
 ```
 
 Lets assign some meaningful activity names
-These are in the file "activity_labels.txt".
+These are in the file _"activity_labels.txt"_.
 
 ```r
 activity.df = read.table(datafile("activity_labels.txt"))
 chopped$Activity = activity.df[chopped$Activity,2]
 ```
-# Finally, Subject is probably best treated as a factor.
+Finally, Subject is probably best treated as a factor.
 
 ```r
 chopped$Subject = factor(chopped$Subject)
 ```
-Create my tidy data.
+Create my tidy data by aggregating the measured data across _Subject_ and _Activity of the _"chopped"_ data, calculating the means.
+It is written as a file _"tidy_data.txt"_ in the working directory.
 
 ```r
-tidy.data = aggregate(chopped[-c(1,2)], by=list(Subject=chopped$Subject, Activity=chopped$Activity), FUN=mean)
+tidy.data = aggregate(chopped[-c(1,2)], 
+                      by=list(Subject=chopped$Subject, 
+                              Activity=chopped$Activity), 
+                      FUN=mean)
 
 write.csv(tidy.data, file="tidy_data.txt", row.names=FALSE)
 ```
+Prepare a code book identifying the tidy data we have created.
 
 ```r
 # Create a code book
-{         # sink() does not work well with knitr, must isolate it in {}
-sink("Codebook.txt")
-cat("Code Book for tidy_data.txt\n")
-cat("\n\n")
-cat("Subject is a factor with the following levels:\n")
-str(tidy.data$Subject)
-cat("\n\n")
-cat("Activity is a factor with the following levels:\n")
-print(data.frame("Activity"=levels(tidy.data$Activity)))
-cat("\n\n")
-cat("The remaining columns contain means and standard deviations for various measurements\n")
-cat("All values are numeric.\n")
-cat("The original data names have had punctuation removed so the column names can be used safely.\n")
-cat("Please consult the README.txt for the original data for further clarification\n")
-print(data.frame("Original Names"=features[selected.features], 
+# sink() does not work well with knitr, must isolate it in {}
+{
+    sink("Codebook.txt")
+    cat("Code Book for tidy_data.txt\n")
+    cat("\n\n")
+    cat("Subject is a factor with the following levels:\n")
+    str(tidy.data$Subject)
+    cat("\n\n")
+    cat("Activity is a factor with the following levels:\n")
+    print(data.frame("Activity"=levels(tidy.data$Activity)))
+    cat("\n\n")
+    cat("The remaining columns contain means and standard deviations for various measurements\n")
+    cat("All values are numeric.\n")
+    cat("The original data names have had punctuation removed so the column names can be used safely.\n")
+    cat("Please consult the README.txt for the original data for further clarification\n")
+    print(data.frame("Original Names"=features[selected.features], 
                  row.names=sanitized.features[selected.features]))
-sink()
+    sink()
 }
 ```
 
