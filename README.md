@@ -1,7 +1,9 @@
+# Getting and Cleaning Data Peer Assessment Project
+
 As required by the license in README.txt, I acknowledge these people and this journal:
  Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
  
-
+## Uncompress, load and merge the data.
 There should be a file "getdata%@Fprojectfiles%2FUCI HAR Dataset.zip" in your working directory.
 We un-compress this.
 Load the data from each of test and train, and merge these into a single data frame.
@@ -37,6 +39,7 @@ training.data = get.data("train", "subject_train.txt", "y_train.txt", "X_train.t
 # merge data
 all.data = rbind(test.data, training.data)
 ```
+## Extract means and standard deviations.
 
 Extract only the means and stds for each measurement.
 Activity and subject are not measurements, so they stay.
@@ -70,7 +73,7 @@ selected.features = c(means,
 
 chopped = all.data[c(1:2, selected.features+2)]    # don't forget offset for first two columns
 ```
-
+## Label the data.
 We need to _sanitize_ the column names that are obtained from the file _"features.txt"_.
 We need to some ad-hoc cleaning of the column names to ensure no
 horrors occur with the "$" operator.
@@ -97,7 +100,8 @@ Finally, Subject is probably best treated as a factor.
 ```r
 chopped$Subject = factor(chopped$Subject)
 ```
-Create my tidy data by aggregating the measured data across _Subject_ and _Activity of the _"chopped"_ data, calculating the means.
+## Save the tidy data.
+Create my tidy data by aggregating the measured data across _Subject_ and _Activity_ of the _"chopped"_ data, calculating the means.
 It is written as a file _"tidy_data.txt"_ in the working directory.
 
 ```r
