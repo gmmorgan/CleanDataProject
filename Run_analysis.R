@@ -1,12 +1,5 @@
-As required by the license in README.txt, I acknowledge these people and this journal:
- Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
- 
 
-There should be a file "getdata%@Fprojectfiles%2FUCI HAR Dataset.zip" in your working directory.
-We un-compress this.
-Load the data from each of test and train, and merge these into a single data frame.
-
-```r
+## ----loaddata------------------------------------------------------------
 unzip("getdata%2Fprojectfiles%2FUCI HAR Dataset.zip")
 
 base.dir = "UCI HAR Dataset"                # this is our dataset
@@ -35,19 +28,9 @@ training.data = get.data("train", "subject_train.txt", "y_train.txt", "X_train.t
 
 # merge data
 all.data = rbind(test.data, training.data)
-```
 
-extract only means and stds for each measurement
-activity and subject are not measurements, so they stay.
-The standard deviations are clearly identified by "std()"
-The means are more troublesome. By my understanding of the description in features_info.txt,
-both"mean()" and "meanFreq()" identify means, but the measurements containing "Mean" are are 
-derived from means, but are not themselves means.
-I therefore exclude them.
-If this is not satisfactory, they can easily be included.
-The file "features.txt" contains useful header information that we need
 
-```r
+## ----extract.means-------------------------------------------------------
 features = read.table(datafile("features.txt"), 
                       colClasses=c("integer",              # line number
                       "character"))[,2]                    # feature name
@@ -63,41 +46,31 @@ selected.features = c(means,
                      stds)
 
 chopped = all.data[c(1:2, selected.features+2)]    # don't forget offset for first two columns
-```
 
-We need to some ad-hoc cleaning of the column names to ensure no
-horrors occur with the "$" operator.
-replace any number of punctuation symbols with dots
 
-```r
+## ----sanitize.names------------------------------------------------------
 sanitized.features = gsub("[[:punct:]]+",".",features)
 # remove any remaining trailing dots
 sanitized.features =  gsub("\\.$","", sanitized.features)
 
 names(chopped) = c(names(chopped[1:2]), sanitized.features[selected.features])
-```
 
-Lets assign some meaningful activity names
-These are in the file "activity_labels.txt".
 
-```r
+## ----activiy.name--------------------------------------------------------
 activity.df = read.table(datafile("activity_labels.txt"))
 chopped$Activity = activity.df[chopped$Activity,2]
-```
-# Finally, Subject is probably best treated as a factor.
 
-```r
+
+## ----factor.subject------------------------------------------------------
 chopped$Subject = factor(chopped$Subject)
-```
-Create my tidy data.
 
-```r
+
+## ----create.tidy.data----------------------------------------------------
 tidy.data = aggregate(chopped[-c(1,2)], by=list(Subject=chopped$Subject, Activity=chopped$Activity), FUN=mean)
 
 write.csv(tidy.data, file="tidy_data.txt", row.names=FALSE)
-```
 
-```r
+## ----codebook------------------------------------------------------------
 # Create a code book
 {         # sink() does not work well with knitr, must isolate it in {}
 sink("Codebook.txt")
@@ -117,8 +90,5 @@ print(data.frame("Original Names"=features[selected.features],
                  row.names=sanitized.features[selected.features]))
 sink()
 }
-```
-
-
 
 
