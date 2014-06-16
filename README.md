@@ -3,6 +3,7 @@
 As required by the license in README.txt, I acknowledge these people and this journal:
  Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
  
+ This is a generated file, produced by running _"really_run_analysis.R"_ on the file _"analysis.Rmd"_to produce _"Run_analysis.R"_, "README.txt"_ and _"Codebook.txt"_ using _knit()_ and _purl()_ from the _knitr_ library.
 ## Uncompress, load and merge the data.
 There should be a file "getdata%@Fprojectfiles%2FUCI HAR Dataset.zip" in your working directory.
 We un-compress this.
@@ -77,7 +78,7 @@ chopped = all.data[c(1:2, selected.features+2)]    # don't forget offset for fir
 We need to _sanitize_ the column names that are obtained from the file _"features.txt"_.
 We need to some ad-hoc cleaning of the column names to ensure no
 horrors occur with the "$" operator.
-We replace any number of punctuation symbols with dots, and then remove any remaining trailing dots that searve no useful purpose.
+We replace any number of punctuation symbols with dots, and then remove any remaining trailing dots that serve no useful purpose.
 
 ```r
 # replace any number of punctuation characters with a single dot.
